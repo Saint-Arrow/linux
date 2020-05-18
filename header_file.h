@@ -1,0 +1,29 @@
+#ifndef Normal_File
+#define Normal_File
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <assert.h>
+#include <string.h>
+#include <netdb.h>
+#include <fcntl.h>
+#include <termios.h>
+#include <errno.h>
+//#include <trace.h>
+#include <math.h>
+#include <wchar.h>
+#include <netinet/tcp.h>
+
+#include <sys/prctl.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/syscall.h>
+#include <linux/fb.h>
+#endif
