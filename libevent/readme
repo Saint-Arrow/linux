@@ -1,0 +1,5 @@
+./configure --prefix=/home/cwj/app_lianxi/libevent/ubuntu
+make&&make install
+gcc hello-world.c -o hello-world -L../../ubuntu/lib -I../../ubuntu/include/ -levent
+gcc hello-world.c -o hello-world ../../ubuntu/lib/libevent.a -I../../ubuntu/include/
+test:nc 127.0.0.1 9995
