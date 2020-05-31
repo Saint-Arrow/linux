@@ -1,0 +1,1 @@
+cmd_/home/topeet/example/driver/proc_test/my_proc.ko := arm-none-linux-gnueabi-ld -EL -r  -T /home/topeet/zImage/iTop4412_Kernel_3.0/scripts/module-common.lds --build-id  -o /home/topeet/example/driver/proc_test/my_proc.ko /home/topeet/example/driver/proc_test/my_proc.o /home/topeet/example/driver/proc_test/my_proc.mod.o
