@@ -10,7 +10,9 @@ all:
 	$(MAKE) ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- -C $(LINUX_ROOT) M=$(PWD) modules
 clean:
 	@rm -rf *.o *.ko
+	@rm -rf  .tmp_versions
 	@rm -f *.o modules.* *.symvers *.mod.c
+	find . -name "*.cmd"|xargs -i rm -rf {}
 endif
 
 
