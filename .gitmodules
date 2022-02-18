@@ -1,0 +1,6 @@
+[submodule "gitee"]
+	path = gitee
+	url = git@gitee.com:daydaydown/STM32.git
+[submodule "cJSON"]
+	path = cJSON
+	url = https://github.com/DaveGamble/cJSON.git
