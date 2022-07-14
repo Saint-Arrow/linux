@@ -11,7 +11,7 @@
 
 int board_open(struct inode *inode, struct file *filp);
 int board_release(struct inode *inode, struct file *filp);
-int  board_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
+long  board_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
 
 
 int gpio=5;
@@ -82,7 +82,7 @@ int board_release(struct inode *inode, struct file *filp)
 /*
  * The ioctl() implementation
  */
-int  board_ioctl(struct file *filp,  unsigned int cmd, unsigned long arg)
+long  board_ioctl(struct file *filp,  unsigned int cmd, unsigned long arg)
 {
 	int retval = 0;
 	int i=0;
@@ -167,11 +167,26 @@ int  board_ioctl(struct file *filp,  unsigned int cmd, unsigned long arg)
 	return retval;
 }
 
+#define IRQ_TEST
 
+#ifdef IRQ_TEST
+static int motor_pt_dev_id = 10000;
+volatile unsigned int irq_flag;
+static irqreturn_t motor_pt_irq_handler(int irq, void *dev_id)
+{
+	int ret = 0;
+	
+    printk("[%s %d]\n", __func__, __LINE__);
+	
+	
+    return 0;
+}
+#endif
 
  int board_init(void)
 {
 	int     ret;
+    
 	printk("gpio_index:%d\n",gpio);
 	if (!gpio_is_valid(gpio)){
         printk("invalid gpio_index: %d\n",gpio);
@@ -181,8 +196,26 @@ int  board_ioctl(struct file *filp,  unsigned int cmd, unsigned long arg)
         printk("gpio %d request failed!\n",gpio);
         return ret;
     }
-	//gpio=gpio_to_desc(gpio);
-	
+    
+    #if 1
+    gpio_direction_input(gpio);
+    udelay(70);
+    int reg_val=gpio_get_value(gpio);	
+    printk("gpio %d value %d \n",gpio,reg_val);
+    #endif
+    
+    #ifdef IRQ_TEST
+	int vd_gpio_irq;
+	vd_gpio_irq = gpio_to_irq(gpio);
+    printk("gpio %d ,vd_gpio_irq %d\n",gpio,gpio);
+    ret = request_irq(vd_gpio_irq,motor_pt_irq_handler,IRQF_TRIGGER_RISING|IRQF_SHARED,"gpio_index",(void *)&motor_pt_dev_id);
+	if(ret != 0)
+	{
+	 	printk("request_irq failure\n");
+		return -1;
+	}
+    #endif
+    
 	ret = misc_register(&boardctrl_dev);
     if (ret != 0) {
         printk("register i2c device failed with %#x!\n", ret);
@@ -193,6 +226,11 @@ int  board_ioctl(struct file *filp,  unsigned int cmd, unsigned long arg)
 
 void board_cleanup(void)
 {
+    #ifdef IRQ_TEST
+    int vd_gpio_irq;
+	vd_gpio_irq = gpio_to_irq(gpio);
+    free_irq(vd_gpio_irq, &motor_pt_dev_id);
+    #endif
 	gpio_free(gpio);
 	misc_deregister(&boardctrl_dev);
 }
