@@ -1,1 +1,0 @@
-cmd_/home/cwj/data/rockchip_gpio/board_ctrl.ko := arm-hisiv300-linux-ld -r  -EL -T ./scripts/module-common.lds -T ./arch/arm/kernel/module.lds  --build-id  -o /home/cwj/data/rockchip_gpio/board_ctrl.ko /home/cwj/data/rockchip_gpio/board_ctrl.o /home/cwj/data/rockchip_gpio/board_ctrl.mod.o ;  true
