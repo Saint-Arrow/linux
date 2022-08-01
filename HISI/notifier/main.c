@@ -29,6 +29,7 @@ static int test_event1(struct notifier_block *this, unsigned long event, void *p
         Event Number is d,lo,
         Event Number is 1,lo,
         */
+        printk("test dev_name:%s\n",dev_name(& (info->dev->dev)));
         return 0; 
 }
 static struct notifier_block test_notifier1 =
