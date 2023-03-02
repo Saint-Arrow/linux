@@ -25,6 +25,8 @@ unsigned char  tx_buf[MAX_TRANSFER][8] = {0};
 unsigned char  rx_buf[MAX_TRANSFER][8] = {0};
 int transfer_index=0;
 
+int ms41969_spi_read(unsigned int addr);
+
 
 static DECLARE_COMPLETION(spi_completion);
 struct task_struct *spi_completion_ctl_task_p = NULL; 
@@ -35,13 +37,20 @@ int spi_completion_ctl_thread(void *arg)
     {
         ret=wait_for_completion_killable(&spi_completion);
         printk("spi transfer done or killed 0x%x 0x%x\n",ret,spi_completion.done);
+        ms41969_spi_read(0x4034);
+
+        if(kthread_should_stop())
+        {    
+            break;
+        }   
     }while(1);
     return 0;
     
 }
 void test_complete(void *arg)
 {
-	printk("spi transfer done \n");
+	printk("spi transfer done %ld\n",in_interrupt());
+    
 }
 
 void ms41969_spi_init(void)
@@ -72,7 +81,7 @@ void ms41969_spi_init(void)
     printk(KERN_ALERT"ms41969_spi driver enter 0x%x \n", ret);
     test_async_msg=spi_message_alloc(MAX_TRANSFER,0);
     
-#if 0
+#if 1
     spi_completion_ctl_task_p = kthread_create(spi_completion_ctl_thread,NULL,"spi compele task");        
     if(!IS_ERR(spi_completion_ctl_task_p))
     {
@@ -82,7 +91,38 @@ void ms41969_spi_init(void)
 
    
 }
+int ms41969_spi_read(unsigned int addr)
+{	
+    int ret = 0;
+    unsigned char temp_tx_buf[8];
+    unsigned char temp_rx_buf[8];
+	struct spi_transfer t[] = {
+        {
+            .tx_buf = &temp_tx_buf[0],
+            .rx_buf = &temp_rx_buf[0],
+            .len = 5
+        }, 
+        
+    };
+    
+    temp_tx_buf[0] = 0xA0;
+	temp_tx_buf[1] = (addr >> 16) & 0xff;
+	temp_tx_buf[2] = (addr >> 8) & 0xff;
+	temp_tx_buf[3] = (addr >> 0) & 0xff;
 
+
+#if 1
+    ret = spi_sync_transfer(spi_device,t,1);
+    if(0 != ret) 
+    {
+        pr_err("ms41969_spi_write error:0x%x",addr);
+        return ret;
+    }
+#endif
+    printk("read:0x%x 0x%x 0x%x 0x%x 0x%x\n",temp_rx_buf[0],temp_rx_buf[1],temp_rx_buf[2],temp_rx_buf[3],temp_rx_buf[4]);
+	return ret;
+
+}
 
 int ms41969_spi_write(unsigned int addr, char data)
 {	
@@ -165,14 +205,21 @@ int ms41969_spi_async_write(unsigned int addr, char data)
     return 0;
 }
 
+
+
+
 #define KEY_PIN 79
 int num_irq_pls1 = 0; 
 int cnt=0X50;
 irqreturn_t pls1_gpio_irq_fun(int irq, void *dev_instance)
 {
 
-    printk("pls1_gpio_irq_fun enter,0x%x\n",++cnt);
+    printk("pls1_gpio_irq_fun enter,0x%x %ld\n",++cnt,in_interrupt());
     ms41969_spi_async_write(0X4034,cnt);
+
+ 
+    
+    complete(&spi_completion);
     return IRQ_HANDLED;
 }
 
@@ -180,7 +227,7 @@ int board_init(void)
 {
     int ret=0;
     ms41969_spi_init();
-    sync_test();
+    //sync_test();
 
     
 
@@ -213,6 +260,8 @@ void board_cleanup(void)
 {
     free_irq(num_irq_pls1, NULL);
     gpio_free(KEY_PIN);
+
+    
     spi_completion.done=-1;
     completion_done(&spi_completion);
     if(spi_completion_ctl_task_p)
