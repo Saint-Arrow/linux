@@ -1,3 +1,8 @@
+ifeq ($(PARAM_FILE), )
+     PARAM_FILE:=../../Makefile.param
+     -include $(PARAM_FILE)
+endif
+
 NAME = workqueue_test
 obj-m += $(NAME).o 
 CURRENT_PATH := $(shell pwd)
@@ -10,8 +15,8 @@ CURRENT_PATH := $(shell pwd)
 
 #LINUX_KERNEL_PATH := /data_ext/cwj/GK7205V300/GKIPCLinuxV100R001C00SPC020/out/gk7205v300/linux-4.9.y
 
-LINUX_KERNEL_PATH := /home/cwj/data_ext/ssd268g_super_sound/kernel
-CROSS_COMPILE=arm-linux-gnueabihf-sigmastar-9.1.0-
+#LINUX_KERNEL_PATH := /home/cwj/data_ext/ssd268g_super_sound/kernel
+#CROSS_COMPILE=arm-linux-gnueabihf-sigmastar-9.1.0-
 
 all:
 	touch $(NAME).c 
