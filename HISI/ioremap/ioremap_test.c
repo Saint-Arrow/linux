@@ -10,16 +10,46 @@
 #include <linux/interrupt.h>
 
 #include <linux/io.h>
+#include <linux/mm.h>
+#include <linux/highmem.h>
+
 
 #define SSP_SIZE                  0x1000  // 64KB
-#define MOTOR_DRV_IO_REG_BASE0    		   (0x120B5400)  //gpio5
+#define MOTOR_DRV_IO_REG_BASE0    		   (0x120B5400)  
 static void __iomem *motor_drv_io_reg_base0;
 static void __iomem *motor_drv_io_reg_base1;
 static void __iomem *motor_drv_io_reg_base2;
 static void __iomem *motor_drv_io_reg_base3;
-int board_init(void)
+
+void mm_show(void)
 {
-	int     ret;
+	printk("PAGE_SIZE:0x%lx\n",PAGE_SIZE);
+	printk("PAGE_OFFSET:0x%lx \n",PAGE_OFFSET);
+	#ifdef CONFIG_HIGHMEM
+	printk("CONFIG_HIGHMEM:0x%lx - 0x%lx\n",PKMAP_BASE,(PKMAP_BASE +(LAST_PKMAP * PAGE_SIZE)) );
+	#else
+	printk("no CONFIG_HIGHMEM\n");
+	#endif
+	
+	/*is_vmalloc_addr*/
+	#ifdef CONFIG_MMU
+	printk("VMALLOC_START:0x%lx VMALLOC_END:0x%lx\n",VMALLOC_START,VMALLOC_END);
+	#else
+	printk("no CONFIG_MMU\n");
+	#endif
+	
+	
+	
+	
+	
+	/*virt_addr_valid*/
+	 
+	
+}
+
+int ioremap_test(void)
+{
+	//int     ret;
     motor_drv_io_reg_base2 = ioremap((unsigned long)MOTOR_DRV_IO_REG_BASE0, (unsigned long)SSP_SIZE);
 	if (!motor_drv_io_reg_base2)
 	{
@@ -59,7 +89,12 @@ int board_init(void)
     pr_err("board_init\n");
     return 0;
 }
-
+int board_init(void)
+{
+	mm_show();
+	//ioremap_test();
+	return 0;
+}
 void board_cleanup(void)
 {
     if(motor_drv_io_reg_base0) iounmap((void *)motor_drv_io_reg_base0);
