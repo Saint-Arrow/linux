@@ -92,6 +92,20 @@ void* BasicHashTable::Lookup(char const* key) const {
 }
 
 unsigned BasicHashTable::numEntries() const {
+#if 1
+printf("fNumBuckets:%d \n",fNumBuckets);
+for(int i=0;i<fNumBuckets;i++)
+{
+    TableEntry* entry=fBuckets[i];
+    int count=0;
+    while(entry != NULL)
+    {
+        entry=entry->fNext;
+        count++;
+    }
+    if(count) printf("%d %d\n",i,count);
+}
+#endif
   return fNumEntries;
 }
 

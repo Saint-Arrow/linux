@@ -41,7 +41,7 @@ void add_key(char *key,char *value);
 
 
 MediaLookupTable test_table;
-#define LOOP_TEST 10000
+#define LOOP_TEST 100
 #define HASH
 int main(int argc,char *argv[])
 {
@@ -90,7 +90,7 @@ int main(int argc,char *argv[])
     printf("diff_time:%lf ms \n",(CurTimeMs2 - CurTimeMs));
 
 
-    printf("%d\n",test_table.fTable->numEntries());
+    printf("numEntries:%d\n",test_table.fTable->numEntries());
     
     sync();
     sleep(1);
