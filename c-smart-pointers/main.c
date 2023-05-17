@@ -25,5 +25,6 @@ int main(int argc ,char *argv[])
 	*fd=fopen("./file_test","w+");
 	usleep(100*1000);
     }
+
     printf("leave\n");
 }
