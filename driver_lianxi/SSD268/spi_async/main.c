@@ -7,6 +7,7 @@
 #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/timex.h>
+#include <linux/delay.h>
 #include <linux/workqueue.h>
 #include <linux/kthread.h>
 
@@ -25,9 +26,16 @@ unsigned char  tx_buf[MAX_TRANSFER][8] = {0};
 unsigned char  rx_buf[MAX_TRANSFER][8] = {0};
 int transfer_index=0;
 
+
+
+//#define KEY_PIN 79
+
+
+
+
+
+
 int ms41969_spi_read(unsigned int addr);
-
-
 static DECLARE_COMPLETION(spi_completion);
 struct task_struct *spi_completion_ctl_task_p = NULL; 
 int spi_completion_ctl_thread(void *arg)
@@ -208,7 +216,8 @@ int ms41969_spi_async_write(unsigned int addr, char data)
 
 
 
-#define KEY_PIN 79
+
+#ifdef KEY_PIN
 int num_irq_pls1 = 0; 
 int cnt=0X50;
 irqreturn_t pls1_gpio_irq_fun(int irq, void *dev_instance)
@@ -222,30 +231,84 @@ irqreturn_t pls1_gpio_irq_fun(int irq, void *dev_instance)
     complete(&spi_completion);
     return IRQ_HANDLED;
 }
+#else
+struct hrtimer tilt_timer ;                              //高精度定时器，用于产生AB电机驱动同步信号
+struct hrtimer pan_timer;                                //水平
+#define NEW_COMMAND_EFFECTIVE_TIME_NS   2000000
+static unsigned int pan_timeout = 0;
+static int p_cnt=0;
+enum hrtimer_restart Hrtimer_Pan_Timeout_Handler(struct hrtimer *t)
+{
+    enum hrtimer_restart hrt_returned;
+	ktime_t kt_enter;
+    p_cnt++;
+    if(100==p_cnt)
+    {
+        p_cnt=0;
+        //printk("do p \n");
+        mdelay(2);
+    }
+    kt_enter = pan_timer.base->get_time(); 
+    pan_timeout=NEW_COMMAND_EFFECTIVE_TIME_NS;
+    hrtimer_forward(&pan_timer, kt_enter, ktime_set(0, pan_timeout));
+    hrt_returned = HRTIMER_RESTART;
+    return hrt_returned;
+}
+static unsigned int tilt_timeout = 0;
+static int t_cnt=0;
+enum hrtimer_restart Hrtimer_Tilt_Timeout_Handler(struct hrtimer *t)
+{
+    enum hrtimer_restart hrt_returned;
+	ktime_t kt_enter;
+    t_cnt++;
+    if(101==t_cnt)
+    {
+        t_cnt=0;
+        //printk("do p \n");
+        mdelay(2);
+    }
+    kt_enter = tilt_timer.base->get_time();
+    tilt_timeout=NEW_COMMAND_EFFECTIVE_TIME_NS;
+    hrtimer_forward(&tilt_timer, kt_enter, ktime_set(0, tilt_timeout));
+    hrt_returned = HRTIMER_RESTART;
+    return hrt_returned;
+}
+#endif
 
 int board_init(void)
 {
-    int ret=0;
     ms41969_spi_init();
     //sync_test();
 
     
 
-
-    //电机1监控信号
-    ret = gpio_request(KEY_PIN, "KEY_PIN");
-    //设置输入
-    ret = gpio_direction_input(KEY_PIN);
-  
-    //获取 GPIO 的中断号
-    num_irq_pls1 = gpio_to_irq(KEY_PIN);
-    printk("gpio_to_irq(PLS1) =  %d\n", num_irq_pls1);
-    //申请中断
-    if(num_irq_pls1 > 0)
+    #ifdef KEY_PIN
     {
-        ret = request_irq(num_irq_pls1, pls1_gpio_irq_fun, IRQF_TRIGGER_FALLING, "inputkey_irq", NULL);//上升沿触发
-        printk("request_irq(num_irq_pls1, pls1_gpio_irq_fun, IRQF_TRIGGER_RISING, DEV_MOTOR_PT_PATH, NULL) =  %d\n\n", ret);
+        int ret=0;
+        //电机1监控信号
+        ret = gpio_request(KEY_PIN, "KEY_PIN");
+        //设置输入
+        ret = gpio_direction_input(KEY_PIN);
+      
+        //获取 GPIO 的中断号
+        num_irq_pls1 = gpio_to_irq(KEY_PIN);
+        printk("gpio_to_irq(PLS1) =  %d\n", num_irq_pls1);
+        //申请中断
+        if(num_irq_pls1 > 0)
+        {
+            ret = request_irq(num_irq_pls1, pls1_gpio_irq_fun, IRQF_TRIGGER_FALLING, "inputkey_irq", NULL);//上升沿触发
+            printk("request_irq(num_irq_pls1, pls1_gpio_irq_fun, IRQF_TRIGGER_RISING, DEV_MOTOR_PT_PATH, NULL) =  %d\n\n", ret);
+        }
     }
+    #else
+    hrtimer_init(&pan_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	pan_timer.function = Hrtimer_Pan_Timeout_Handler;
+    hrtimer_init(&tilt_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	tilt_timer.function = Hrtimer_Tilt_Timeout_Handler;
+
+    hrtimer_start(&pan_timer, ktime_set(0, 1000), HRTIMER_MODE_REL);
+    hrtimer_start(&tilt_timer, ktime_set(0, 1000), HRTIMER_MODE_REL);
+    #endif
  
     
 
@@ -258,6 +321,7 @@ int board_init(void)
 
 void board_cleanup(void)
 {
+    #ifdef KEY_PIN
     free_irq(num_irq_pls1, NULL);
     gpio_free(KEY_PIN);
 
@@ -270,6 +334,10 @@ void board_cleanup(void)
         spi_completion_ctl_task_p = NULL;
         printk(KERN_ALERT"pt_horizontal_ctl_task_p exit");
     }
+    #else
+    hrtimer_cancel(&tilt_timer);
+	hrtimer_cancel(&pan_timer);
+    #endif
 
     
     pr_err("board_cleanup\n");
