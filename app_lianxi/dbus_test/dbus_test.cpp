@@ -4,7 +4,7 @@
 #include <cstdlib> //提供了杂项函数和类型，如字符串转换、随机数生成 system调用
 #include <cstring> //提供了字符串处理相关的类和函数，包括 std::string 类和相关的操作函数
 #include <vector> //提供了动态数组（向量）相关的类和函数，包括 std::vector 类
-
+#include <thread>
 
 #include <ctime>
 #include <chrono> //时间相关的函数
@@ -62,10 +62,13 @@ DBusHandlerResult DBusObjectPathMessageFunction_test    (DBusConnection  *connec
                                                                 DBusMessage     *message,
                                                                 void            *user_data)
 {
-  const char* member = dbus_message_get_member(message);
   const char *path = dbus_message_get_path(message);
-  std::cout<<"path:"<<path<<" msg:"<<member<<std::endl;
-
+  const char *interface = dbus_message_get_interface (message);
+  const char* member = dbus_message_get_member(message);
+  
+  std::cout<<"path:"<<path<<" interface:"<<interface<<" member:"<<member<<std::endl;
+  /*回调函数的所在线程是 dbus_connection_read_write_dispatch 所在的线程*/
+  std::cout << "Thread ID: " << std::this_thread::get_id() << std::endl;
   {
     DBusMessage *reply = dbus_message_new_method_return (message);
 
@@ -94,11 +97,26 @@ DBusHandlerResult DBusObjectPathMessageFunction_introspect    (DBusConnection  *
                                                                 void            *user_data)
 {
   DBusMessage *reply = dbus_message_new_method_return(message);
-
-  // 添加字符串参数到消息中
-  if (!dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspection_xml, DBUS_TYPE_INVALID)) {
-      // 错误处理
+  std::ifstream file("/usr/share/dbus-1/interfaces/dbus_test.xml"); // 打开文件,读取配置文件的方式扩展性更强
+  if (!file.is_open())
+  {
+    // 添加字符串参数到消息中
+    if (!dbus_message_append_args(reply, DBUS_TYPE_STRING, &introspection_xml, DBUS_TYPE_INVALID)) {
+        // 错误处理
+    }
   }
+  else
+  {
+    std::string content((std::istreambuf_iterator<char>(file)), // 使用流迭代器将文件内容读入字符串
+                        (std::istreambuf_iterator<char>()));
+    const char* char_ptr = content.c_str();
+
+    if (!dbus_message_append_args(reply, DBUS_TYPE_STRING, &char_ptr, DBUS_TYPE_INVALID)) {
+        // 错误处理
+    }
+    file.close(); // 关闭文件                   
+  }
+ 
 
   // 发送返回消息
   if (!dbus_connection_send(connection, reply, NULL)) {
@@ -109,8 +127,17 @@ DBusHandlerResult DBusObjectPathMessageFunction_introspect    (DBusConnection  *
   dbus_message_unref(reply);
   return DBUS_HANDLER_RESULT_HANDLED;
 }
+
+void thread_dbus_while() {
+    std::cout << "This is a new thread."<< std::this_thread::get_id()  << std::endl;
+    while (dbus_connection_read_write_dispatch (test_conn, -1))
+    {}
+
+    dbus_connection_unref (test_conn);
+}
 int main()
 {
+  std::cout << "main Thread ID: " << std::this_thread::get_id() << std::endl;
   test_conn=init_connection(DBUS_BUS_SYSTEM,"test.method.server");
   if(nullptr != test_conn)
   {
@@ -121,8 +148,8 @@ int main()
     DBusObjectPathVTable  vtable;
     vtable.message_function=DBusObjectPathMessageFunction_test;
     vtable.unregister_function=DBusObjectPathUnregisterFunction_test;
-    dbus_connection_register_object_path(test_conn,"/test/method/server",&vtable,NULL);
-    dbus_connection_register_object_path(test_conn,"/server1",&vtable,NULL);//总线名称和path不一定是一致的，是2个概念
+    dbus_connection_register_object_path(test_conn,"/path0",&vtable,NULL);
+    dbus_connection_register_object_path(test_conn,"/path1",&vtable,NULL);//总线名称和path不一定是一致的，是2个概念
     {//测试unregister_function回调的情况
     dbus_connection_register_object_path(test_conn,"/test/method/server2",&vtable,(void *)"user path string");
     std::cout<<"test api:dbus_connection_unregister_object_path "<<std::endl;
@@ -137,10 +164,9 @@ int main()
                                       NULL);
 
     //消息分发
-    while (dbus_connection_read_write_dispatch (test_conn, -1))
-    {}
-
-    dbus_connection_unref (test_conn);
+    std::thread t(thread_dbus_while);
+    t.join();
+    
   }
   else
   {

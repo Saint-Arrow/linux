@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<node name="test.method.server">
+  <interface name="test.method.server.Introspectable">
+	  <method name="Introspect">
+		<arg name="data" direction="in" type="s"/>
+	  </method>
+	  <!--
+        Unregister:
+
+        Called by secret Agents to notify NetworkManager that they will no longer
+        handle requests for network secrets. Agents are automatically unregistered
+        when they disconnect from D-Bus.
+		-->
+	  <method name="Introspect1">
+		<arg name="data" direction="in" type="s"/>
+	  </method>
+  </interface>
+</node>
