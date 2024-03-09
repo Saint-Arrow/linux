@@ -5,3 +5,4 @@ set(CMAKE_CXX_STANDARD 11)
 PROJECT(cpp_lianxi)
 
 ADD_SUBDIRECTORY(hello_world)
+ADD_SUBDIRECTORY(STL_demo)
