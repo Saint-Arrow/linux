@@ -10,8 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cd app_lianxi/mdio
-      - run: cat Makefile
       - name: build
-      - working-directory: app_lianxi/mdio
-      - run: make clean && make
+        working-directory: app_lianxi/mdio
+        run: |
+          cat Makefile
+          make clean && make
 
