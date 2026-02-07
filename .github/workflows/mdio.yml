@@ -3,11 +3,14 @@ on:
   push:
     paths:
       - 'app_lianxi/mdio/**'
+      - '.github/workflows/mdio.yml'
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: cd app_lianxi/mdio
+      - run: cat app_lianxi/mdio/Makefile
+      working-directory: app_lianxi/mdio
       - run: make clean && make
 
