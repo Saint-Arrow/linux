@@ -9,10 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cd app_lianxi/mdio
       - name: build
         working-directory: app_lianxi/mdio
         run: |
-          cat Makefile
           make clean && make
 
