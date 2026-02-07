@@ -1,11 +1,13 @@
 name: Test Runner Resources
-on: [push]
+on:
+  push:
+    paths:
+      - 'app_lianxi/mdio/**'
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: echo "Hello from free Ubuntu VM!"
-      - run: df -h
-      - run: free -h
+      - run: cd app_lianxi/mdio
+      - run: make clean && make
 
