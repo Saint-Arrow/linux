@@ -26,7 +26,7 @@
     printf("mdio eth0 0 0x12\n\n");      \
     exit(0);
 
-int sockfd;
+int sockfd=-1;
 
 int main(int argc, char *argv[]){
         
