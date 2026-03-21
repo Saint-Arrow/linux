@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mongoose CGI Server</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #1a1a2e; color: #eee;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh;
+        }
+        .container { text-align: center; }
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; color: #e94560; }
+        p { font-size: 1.1rem; color: #aaa; margin-bottom: 2rem; }
+        .api-list { text-align: left; display: inline-block; }
+        .api-list a {
+            display: block; padding: 8px 16px; margin: 4px 0;
+            color: #0f3460; background: #e94560; border-radius: 4px;
+            text-decoration: none; font-family: monospace;
+        }
+        .api-list a:hover { background: #ff6b6b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mongoose CGI Server</h1>
+        <p>Server is running. Available API endpoints:</p>
+        <div class="api-list">
+            <a href="/api/user/list">GET /api/user/list</a>
+            <a href="/api/user/detail?id=1">GET /api/user/detail?id=1</a>
+            <a href="/api/device/list">GET /api/device/list</a>
+            <a href="/api/device/status?id=dev-001">GET /api/device/status?id=dev-001</a>
+            <a href="/api/sys/info">GET /api/sys/info</a>
+            <a href="/api/sys/time">GET /api/sys/time</a>
+            <a href="/api/sys/health">GET /api/sys/health</a>
+        </div>
+    </div>
+</body>
+</html>
