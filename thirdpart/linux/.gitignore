@@ -1,0 +1,45 @@
+#==============================================================================
+# thirdpart/linux/.gitignore
+#
+# 说明:
+#   Linux 内核源码体积庞大 (解压后约 1.3GB, 编译后数 GB), 不适合直接提交到
+#   本仓库。这里只把构建脚本 (build_kernel.sh / run_qemu.sh) 和说明文档
+#   (README.md) 纳入版本控制, 内核源码本体与压缩包通过 .gitignore 忽略。
+#
+#   获取内核源码的方式见 README.md (手动上传 tarball 或 git clone)。
+#==============================================================================
+
+# ----- 内核源码压缩包 (体积大, 不入库) -----
+*.tar.gz
+*.tar.xz
+*.tar.bz2
+*.tgz
+
+# ----- 解压后的内核源码目录 -----
+linux-5.15.*/
+linux-stable/
+linux/
+
+# ----- 内核编译产物 -----
+# bzImage / vmlinux 等镜像
+arch/*/boot/bzImage
+arch/*/boot/Image
+vmlinux
+vmlinux.32
+
+# 编译输出目录 (使用 O=output 时)
+output/
+build/
+
+# 内核配置备份
+.config.old
+.config.backup
+
+# 模块编译产物
+modules_install/
+
+# ----- 编辑器/系统临时文件 -----
+*.swp
+*.swo
+*~
+.DS_Store
